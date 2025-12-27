@@ -1,0 +1,62 @@
+{
+  "timestamp": "2025-12-27T07:36:11.920896",
+  "dataset": "UNSW_NB15_training-set.csv",
+  "best_model": "gradient_boosting",
+  "all_results": {
+    "random_forest": {
+      "accuracy": 0.9524936553651373,
+      "precision": 0.9747679938416799,
+      "recall": 0.9549206083204156,
+      "f1": 0.9647422331329891,
+      "roc_auc": 0.9934041352202198,
+      "confusion_matrix": [
+        [
+          10610,
+          590
+        ],
+        [
+          1076,
+          22793
+        ]
+      ],
+      "classification_report": "              precision    recall  f1-score   support\n\n      Benign       0.91      0.95      0.93     11200\n      Attack       0.97      0.95      0.96     23869\n\n    accuracy                           0.95     35069\n   macro avg       0.94      0.95      0.95     35069\nweighted avg       0.95      0.95      0.95     35069\n"
+    },
+    "gradient_boosting": {
+      "accuracy": 0.9607345518834298,
+      "precision": 0.9653645617810146,
+      "recall": 0.9773765134693535,
+      "f1": 0.971333402727178,
+      "roc_auc": 0.9942712472992465,
+      "confusion_matrix": [
+        [
+          10363,
+          837
+        ],
+        [
+          540,
+          23329
+        ]
+      ],
+      "classification_report": "              precision    recall  f1-score   support\n\n      Benign       0.95      0.93      0.94     11200\n      Attack       0.97      0.98      0.97     23869\n\n    accuracy                           0.96     35069\n   macro avg       0.96      0.95      0.95     35069\nweighted avg       0.96      0.96      0.96     35069\n"
+    },
+    "extra_trees": {
+      "accuracy": 0.9475320083264421,
+      "precision": 0.9505829412967887,
+      "recall": 0.9735221416900582,
+      "f1": 0.9619158008030798,
+      "roc_auc": 0.9891714821376202,
+      "confusion_matrix": [
+        [
+          9992,
+          1208
+        ],
+        [
+          632,
+          23237
+        ]
+      ],
+      "classification_report": "              precision    recall  f1-score   support\n\n      Benign       0.94      0.89      0.92     11200\n      Attack       0.95      0.97      0.96     23869\n\n    accuracy                           0.95     35069\n   macro avg       0.95      0.93      0.94     35069\nweighted avg       0.95      0.95      0.95     35069\n"
+    }
+  },
+  "model_path": "models/unsw_attack_detector.joblib"
+}

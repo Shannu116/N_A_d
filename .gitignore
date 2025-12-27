@@ -1,0 +1,108 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+
+
+
+
+# Keep model training reports but ignore large model files
+!trained_models/unsw_training_report.json
+
+# Test results
+test_results/
+*.coverage
+.pytest_cache/
+
+# Dataset files (large files, should be downloaded separately)
+
+!requirements.txt
+
+# Keep specific small CSV files if needed
+# !small_sample.csv
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb
+
+# Environment variables
+.env
+.env.local
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+
+# Dataset files (large files, should be downloaded separately)
+BoT_IoT/
+Bot_IoT/
+BoT_IoT
+Bot_IoT
+
+*.csv
+# PyCharm
+.idea/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# Profiling data
+*.prof
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Compiled
+*.pyc
+*.pyo
+*.pyd
+
+# Splunk logs can get large, but keep them for debugging
+# Uncomment below if you want to ignore Splunk logs
+# logs/splunk_anomalies.log
