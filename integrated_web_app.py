@@ -29,6 +29,7 @@ from pathlib import Path
 from typing import List, Dict, Optional
 from collections import deque
 from contextlib import asynccontextmanager
+from queue import Queue
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -54,6 +55,7 @@ if os.geteuid() != 0:
 async def lifespan(app: FastAPI):
     # Startup
     asyncio.create_task(monitor_logs())
+    asyncio.create_task(process_message_queue())
     yield
     # Shutdown
     stop_detection()
@@ -79,6 +81,7 @@ app.add_middleware(
 detection_process = None
 anomaly_buffer = deque(maxlen=1000)  # Store last 1000 anomalies in memory
 flow_buffer = deque(maxlen=1000)  # Store last 1000 flows in memory
+message_queue = Queue()  # Thread-safe queue for messages from parser thread
 stats = {
     "total_anomalies": 0,
     "total_flows": 0,
@@ -183,15 +186,14 @@ def parse_detection_output():
                     # Save previous anomaly
                     anomaly_buffer.append(current_anomaly)
                     stats["total_anomalies"] += 1
-                    
                     # Log to Splunk
                     log_to_splunk(current_anomaly)
                     
-                    # Broadcast in thread-safe way
-                    asyncio.run(manager.broadcast({
+                    # Put message in queue for async processing
+                    message_queue.put({
                         "type": "anomaly",
                         "data": current_anomaly
-                    }))
+                    })
                 current_anomaly = {
                     "timestamp": datetime.now().isoformat(),
                     "id": stats["total_anomalies"] + 1
@@ -244,10 +246,11 @@ def parse_detection_output():
                             # Update from detection output if needed
                             pass
                     
-                    asyncio.run(manager.broadcast({
+                    # Put message in queue for async processing
+                    message_queue.put({
                         "type": "stats",
-                        "data": stats
-                    }))
+                        "data": stats.copy()
+                    })
                 except Exception as e:
                     print(f"Error parsing stats line: {e}")
             
@@ -874,7 +877,20 @@ async def websocket_endpoint(websocket: WebSocket):
         manager.disconnect(websocket)
 
 
-# Background task to monitor for new anomalies
+async def process_message_queue():
+    """Background task to process messages from parser thread and broadcast to WebSocket clients."""
+    while True:
+        await asyncio.sleep(0.1)  # Check queue frequently
+        
+        try:
+            # Process all available messages
+            while not message_queue.empty():
+                message = message_queue.get_nowait()
+                await manager.broadcast(message)
+        except Exception as e:
+            print(f"Error processing message queue: {e}")
+
+
 async def monitor_logs():
     """Background task to monitor log files and broadcast updates."""
     last_check = datetime.now()
@@ -894,6 +910,7 @@ async def monitor_logs():
                     await manager.broadcast({"type": "update", "timestamp": datetime.now().isoformat()})
                     last_check = datetime.now()
         except Exception as e:
+            print(f"Error in monitor_logs: {e}")
             print(f"Error in monitor_logs: {e}")
 
 
