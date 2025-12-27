@@ -140,8 +140,10 @@ class ConnectionManager:
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.active_connections.append(websocket)
-
+        print(f"[WebSocket] Client connected. Total connections: {len(self.active_connections)}")
     def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+        print(f"[WebSocket] Client disconnected. Total connections: {len(self.active_connections)}")
         self.active_connections.remove(websocket)
 
     async def broadcast(self, message: dict):
@@ -170,6 +172,7 @@ def parse_detection_output():
         return
     
     current_anomaly = {}
+    print("[PARSER] Thread started, monitoring detection output...")
     
     try:
         while detection_process and detection_process.poll() is None:
@@ -190,10 +193,12 @@ def parse_detection_output():
                     log_to_splunk(current_anomaly)
                     
                     # Put message in queue for async processing
+                    print(f"[PARSER] Putting anomaly in queue: {current_anomaly.get('flow', 'N/A')}")
                     message_queue.put({
                         "type": "anomaly",
                         "data": current_anomaly
                     })
+                    print(f"[PARSER] Queue size: {message_queue.qsize()}")
                 current_anomaly = {
                     "timestamp": datetime.now().isoformat(),
                     "id": stats["total_anomalies"] + 1
@@ -331,12 +336,16 @@ async def read_root():
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                 margin: 0;
                 padding: 0;
+                position: relative;
+                z-index: 1;
             }
             .header-section {
                 background: linear-gradient(135deg, #0C4B33 0%, #1a7a52 100%);
                 color: white;
                 padding: 20px;
                 box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                position: relative;
+                z-index: 10;
             }
             .header-section h1 {
                 font-size: clamp(1.5rem, 4vw, 2rem);
@@ -423,6 +432,8 @@ async def read_root():
                 max-width: 1400px;
                 margin: 0 auto;
                 padding: 0 15px;
+                position: relative;
+                z-index: 10;
             }
             
             .status-indicator {
@@ -455,7 +466,7 @@ async def read_root():
                 padding: 5px 10px;
             }
             
-            /* Modal Styles */
+            /* Modal Styles - Clean and Simple */
             .modal-backdrop {
                 display: none;
                 position: fixed;
@@ -463,45 +474,98 @@ async def read_root():
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background: rgba(0,0,0,0.5);
-                z-index: 1000;
-                align-items: center;
-                justify-content: center;
+                background-color: rgba(0, 0, 0, 0.85);
+                z-index: 999999;
+                overflow-y: scroll;
+                padding: 20px 0;
             }
+            
             .modal-backdrop.show {
-                display: flex;
+                display: block !important;
             }
+            
             .modal-content-custom {
                 background: white;
-                border-radius: 10px;
-                padding: 25px;
-                max-width: 800px;
-                width: 90%;
-                max-height: 90vh;
-                overflow-y: auto;
-                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-                animation: modalSlideIn 0.3s ease-out;
+                border-radius: 12px;
+                padding: 50px 35px 35px 35px;
+                max-width: 850px;
+                width: calc(100% - 40px);
+                margin: 20px auto;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+                position: relative;
+                border: 1px solid #e0e0e0;
             }
-            @keyframes modalSlideIn {
-                from {
-                    opacity: 0;
-                    transform: translateY(-50px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
+            
             .modal-close {
-                float: right;
-                font-size: 28px;
-                font-weight: bold;
-                color: #999;
+                position: absolute;
+                top: 12px;
+                right: 15px;
+                font-size: 30px;
+                font-weight: 700;
+                color: #888;
                 cursor: pointer;
-                line-height: 20px;
+                line-height: 1;
+                background: transparent;
+                border: none;
+                width: 30px;
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 4px;
+                transition: all 0.2s;
             }
+            
             .modal-close:hover {
-                color: #000;
+                color: #dc3545;
+                background: #f8f9fa;
+            }
+            
+            #modal-body {
+                color: #212529;
+            }
+            #modal-body h3 {
+                margin-top: 0;
+                color: #0C4B33;
+                border-bottom: 3px solid #0C4B33;
+                padding-bottom: 10px;
+                margin-bottom: 20px;
+                font-size: 1.75rem;
+            }
+            #modal-body h5 {
+                color: #0C4B33;
+                margin-top: 25px;
+                margin-bottom: 15px;
+                font-weight: 600;
+                font-size: 1.25rem;
+            }
+            #modal-body .table {
+                margin-bottom: 20px;
+                font-size: 1rem;
+            }
+            #modal-body .table th {
+                background-color: #f8f9fa;
+                font-weight: 600;
+                width: 40%;
+                padding: 12px;
+            }
+            #modal-body .alert {
+                border-radius: 8px;
+                padding: 15px;
+                margin-bottom: 0;
+            }
+            #modal-body .alert-info {
+                background-color: #e7f3ff;
+                border-color: #bee5eb;
+                color: #004085;
+            }
+            #modal-body .row {
+                font-size: 1rem;
+            }
+            #modal-body .badge {
+                font-size: 0.95rem;
+                padding: 6px 12px;
+                border-radius: 5px;
             }
             
             /* Responsive Typography */
@@ -712,20 +776,17 @@ async def read_root():
                 div.textContent = String(text);
                 return div.innerHTML;
             }
-                
-                // Update anomaly counter
-                const total = parseInt(document.getElementById('total-anomalies').textContent) + 1;
-                document.getElementById('total-anomalies').textContent = total;
-            }
 
             function showAlertDetails(alertId) {
+                console.log('showAlertDetails called with ID:', alertId);
+                console.log('Available anomaly data:', window.anomalyData);
+                
                 const anomaly = window.anomalyData[alertId];
                 
                 if (!anomaly) {
                     console.error('Anomaly data not found for ID:', alertId);
                     console.log('Available alert IDs:', Object.keys(window.anomalyData || {}));
-                    document.getElementById('modal-body').innerHTML = '<div class="alert alert-danger"><strong>Error:</strong> Alert data not available</div>';
-                    document.getElementById('alertModal').classList.add('show');
+                    alert('Alert data not available. Check browser console for details.');
                     return;
                 }
                 
@@ -745,41 +806,48 @@ async def read_root():
                 
                 const modalContent = `
                     <h3><i class="fas fa-exclamation-triangle" style="color: ${severityColor}"></i> Anomaly Details</h3>
-                    <hr>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <strong>Severity:</strong>
-                            <span class="badge" style="background-color: ${severityColor}">${severityLabel} - ${confidence.toFixed(2)}%</span>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-2">
+                            <strong style="font-size: 1.1rem;">Severity:</strong><br>
+                            <span class="badge" style="background-color: ${severityColor}; font-size: 1.1rem; margin-top: 5px;">${severityLabel} - ${confidence.toFixed(2)}%</span>
                         </div>
-                        <div class="col-md-6">
-                            <strong>Time:</strong> ${escapeHtml(anomaly.time) || 'N/A'}
+                        <div class="col-md-6 mb-2">
+                            <strong style="font-size: 1.1rem;">Detection Time:</strong><br>
+                            <span style="font-size: 1rem; margin-top: 5px; display: inline-block;">${escapeHtml(anomaly.time) || 'N/A'}</span>
                         </div>
                     </div>
                     
                     <h5><i class="fas fa-network-wired"></i> Network Information</h5>
-                    <table class="table table-bordered">
-                        <tr><th>Flow ID</th><td>${escapeHtml(anomaly.flow) || 'N/A'}</td></tr>
-                        <tr><th>Source IP</th><td>${escapeHtml(anomaly.source) || 'N/A'}</td></tr>
-                        <tr><th>Destination IP</th><td>${escapeHtml(anomaly.destination) || 'N/A'}</td></tr>
-                        <tr><th>Protocol</th><td>${escapeHtml(anomaly.protocol) || 'N/A'}</td></tr>
-                        <tr><th>Duration</th><td>${escapeHtml(anomaly.duration) || 'N/A'}s</td></tr>
+                    <table class="table table-bordered table-striped">
+                        <tbody>
+                            <tr><th>Flow ID</th><td><code>${escapeHtml(anomaly.flow) || 'N/A'}</code></td></tr>
+                            <tr><th>Source IP</th><td><strong>${escapeHtml(anomaly.source) || 'N/A'}</strong></td></tr>
+                            <tr><th>Destination IP</th><td><strong>${escapeHtml(anomaly.destination) || 'N/A'}</strong></td></tr>
+                            <tr><th>Protocol</th><td><span class="badge bg-secondary">${escapeHtml(anomaly.protocol) || 'N/A'}</span></td></tr>
+                            <tr><th>Duration</th><td>${escapeHtml(anomaly.duration) || 'N/A'} seconds</td></tr>
+                        </tbody>
                     </table>
                     
                     <h5><i class="fas fa-chart-bar"></i> Traffic Statistics</h5>
-                    <table class="table table-bordered">
-                        <tr><th>Packets</th><td>${escapeHtml(anomaly.packets_info) || 'N/A'}</td></tr>
-                        <tr><th>Bytes</th><td>${escapeHtml(anomaly.bytes_info) || 'N/A'}</td></tr>
-                        <tr><th>Rate</th><td>${(parseFloat(anomaly.rate) || 0).toFixed(2)} packets/second</td></tr>
+                    <table class="table table-bordered table-striped">
+                        <tbody>
+                            <tr><th>Packets</th><td>${escapeHtml(anomaly.packets_info) || 'N/A'}</td></tr>
+                            <tr><th>Bytes</th><td>${escapeHtml(anomaly.bytes_info) || 'N/A'}</td></tr>
+                            <tr><th>Packet Rate</th><td><strong>${(parseFloat(anomaly.rate) || 0).toFixed(2)}</strong> packets/second</td></tr>
+                        </tbody>
                     </table>
                     
                     <h5><i class="fas fa-info-circle"></i> Additional Information</h5>
-                    <table class="table table-bordered">
-                        <tr><th>Timestamp</th><td>${escapeHtml(anomaly.timestamp) || 'N/A'}</td></tr>
-                        <tr><th>Alert ID</th><td>${escapeHtml(anomaly.id) || 'N/A'}</td></tr>
+                    <table class="table table-bordered table-striped">
+                        <tbody>
+                            <tr><th>Timestamp</th><td>${escapeHtml(anomaly.timestamp) || 'N/A'}</td></tr>
+                            <tr><th>Alert ID</th><td><code>#${escapeHtml(anomaly.id) || 'N/A'}</code></td></tr>
+                        </tbody>
                     </table>
                     
-                    <div class="alert alert-info mt-3">
-                        <strong><i class="fas fa-lightbulb"></i> Recommendation:</strong>
+                    <div class="alert alert-info mt-4">
+                        <strong><i class="fas fa-lightbulb"></i> Recommendation:</strong><br>
                         ${confidence >= 90 ? 'High confidence anomaly detected. Immediate investigation recommended.' :
                           confidence >= 75 ? 'Moderate confidence anomaly. Review and monitor this flow.' :
                           'Low confidence anomaly. May be a false positive, but worth monitoring.'}
@@ -875,10 +943,9 @@ async def websocket_endpoint(websocket: WebSocket):
             await asyncio.sleep(1)
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-
-
 async def process_message_queue():
     """Background task to process messages from parser thread and broadcast to WebSocket clients."""
+    print("[QUEUE PROCESSOR] Started")
     while True:
         await asyncio.sleep(0.1)  # Check queue frequently
         
@@ -886,7 +953,12 @@ async def process_message_queue():
             # Process all available messages
             while not message_queue.empty():
                 message = message_queue.get_nowait()
+                print(f"[QUEUE PROCESSOR] Processing message: {message.get('type')}")
+                print(f"[QUEUE PROCESSOR] Active WebSocket connections: {len(manager.active_connections)}")
                 await manager.broadcast(message)
+                print(f"[QUEUE PROCESSOR] Message broadcast complete")
+        except Exception as e:
+            print(f"[QUEUE PROCESSOR] Error processing message queue: {e}")
         except Exception as e:
             print(f"Error processing message queue: {e}")
 
